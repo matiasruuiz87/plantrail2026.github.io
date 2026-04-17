@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan Trail Running 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff; --bg2: #f5f5f3; --bg3: #ebebea;
+  --text: #1a1a18; --text2: #6b6b67; --text3: #9e9e9a;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+  --info-bg: #e6f1fb; --info-text: #0c447c; --info-border: #b5d4f4;
+  --radius: 8px; --radius-lg: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+    --text: #e8e8e4; --text2: #9e9e9a; --text3: #6b6b67;
+    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.18);
+    --info-bg: #042c53; --info-text: #85b7eb; --info-border: #185fa5;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+.app { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.header { margin-bottom: 1.5rem; }
+.header h1 { font-size: 22px; font-weight: 500; }
+.header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 1.5rem; }
+@media(max-width:600px){ .metrics { grid-template-columns: repeat(2,1fr); } }
+.metric { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; }
+.metric-label { font-size: 11px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.metric-value { font-size: 22px; font-weight: 500; }
+.metric-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab { font-size: 13px; padding: 6px 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; }
+.tab.active { background: var(--info-bg); color: var(--info-text); border-color: var(--info-border); }
+.panel { display: none; }
+.panel.active { display: block; }
+.section { margin-bottom: 1.5rem; }
+.section-title { font-size: 11px; font-weight: 500; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+.chart-wrap { position: relative; width: 100%; height: 220px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; font-size: 12px; color: var(--text2); }
+.legend span { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; font-size: 12px; border-collapse: collapse; }
+th { text-align: left; font-weight: 500; font-size: 10px; color: var(--text2); padding: 6px 8px; border-bottom: 0.5px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+td { padding: 6px 8px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr.current-week td { background: var(--info-bg); }
+.badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+.badge-B { background:#deedf9; color:#0c447c; }
+.badge-I { background:#f7ddd4; color:#993c1d; }
+.badge-R { background:#dcefd1; color:#3b6d11; }
+.badge-S { background:#faeeda; color:#854f0b; }
+.badge-T { background:#f5dce9; color:#993356; }
+.badge-G { background:#d4f0e5; color:#0f6e56; }
+@media(prefers-color-scheme:dark){
+  .badge-B{background:#042c53;color:#85b7eb;}
+  .badge-I{background:#4a1b0c;color:#f0997b;}
+  .badge-R{background:#173404;color:#97c459;}
+  .badge-S{background:#412402;color:#ef9f27;}
+  .badge-T{background:#4b1528;color:#ed93b1;}
+  .badge-G{background:#04342c;color:#5dcaa5;}
+}
+.progress-bar { height: 4px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 3px; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+.input-val { width: 56px; padding: 3px 5px; font-size: 11px; border: 0.5px solid var(--border2); border-radius: 4px; background: var(--bg); color: var(--text); text-align: center; }
+.input-val:focus { outline: none; border-color: #378add; }
+.input-time { width: 64px; }
+.input-des { width: 64px; }
+.ciclo-header td { font-size: 11px; font-weight: 500; background: var(--bg2); color: var(--text2); padding: 4px 8px; }
+.comment-cell { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--text2); }
+.doughnut-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width:480px){ .doughnut-grid { grid-template-columns: 1fr; } }
+.toggle-group { display: flex; gap: 4px; margin-bottom: 14px; }
+.toggle-btn { font-size: 12px; padding: 5px 16px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: transparent; color: var(--text2); cursor: pointer; }
+.toggle-btn.active { background: var(--bg3); color: var(--text); border-color: var(--border2); font-weight: 500; }
+.hint { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Plan macro trail running 2026</h1>
+    <p>Semanas 1–28 &middot; Mar → Oct 2026 &middot; Meta: UTACCH</p>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('overview',this)">Resumen</button>
+    <button class="tab" onclick="showPanel('table',this)">Semanas</button>
+    <button class="tab" onclick="showPanel('progress',this)">Progreso</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="panel-overview" class="panel active">
+    <div class="section">
+      <div class="section-title">Km teóricos vs reales por semana</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#378ADD"></span>Km teóricos (color = tipo)</span>
+        <span><span class="legend-dot" style="background:#1D9E75"></span>Km reales</span>
+      </div>
+      <div class="chart-wrap"><canvas id="mainChart" role="img" aria-label="Km teóricos vs reales por semana">Plan semanal 2026.</canvas></div>
+    </div>
+    <div class="section">
+      <div class="section-title">Distribución por tipo de semana</div>
+      <div class="doughnut-grid">
+        <div class="chart-wrap" style="height:180px;"><canvas id="typeChart" role="img" aria-label="Distribución de tipos de semana">Tipos.</canvas></div>
+        <div id="type-legend" style="display:flex;flex-direction:column;justify-content:center;gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div id="panel-table" class="panel">
+    <div class="section">
+      <div class="hint">Campos editables: km real · tiempo real (h:mm) · desnivel (m) — Enter o clic afuera para guardar</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sem</th><th>Fecha</th><th>Tipo</th>
+              <th>Km teo</th><th>Km real</th>
+              <th>T. teórico</th><th>T. real</th>
+              <th>Desnivel (m)</th>
+              <th>Nota</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="panel-progress" class="panel">
+    <div class="toggle-group">
+      <button class="toggle-btn active" onclick="setMetric('km',this)">Kilómetros</button>
+      <button class="toggle-btn" onclick="setMetric('tiempo',this)">Tiempo</button>
+    </div>
+    <div class="section">
+      <div class="section-title" id="complianceTitle">Cumplimiento semanal — km (%)</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#1D9E75"></span>≥90%</span>
+        <span><span class="legend-dot" style="background:#EF9F27"></span>70–89%</span>
+        <span><span class="legend-dot" style="background:#E24B4A"></span>&lt;70%</span>
+        <span><span class="legend-dot" style="background:#b4b2a9"></span>Sin datos</span>
+      </div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="complianceChart" role="img" aria-label="Cumplimiento semanal">Cumplimiento.</canvas></div>
+    </div>
+    <div class="section">
+      <div class="section-title" id="acumTitle">Acumulado km (teórico vs real)</div>
+      <div class="legend">
+        <span><span class="legend-dot" style="background:#378ADD"></span>Teórico</span>
+        <span><span class="legend-dot" style="background:#1D9E75"></span>Real</span>
+      </div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="acumChart" role="img" aria-label="Acumulado">Acumulado.</canvas></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// tiempoTeo en minutos — cargado del Excel (04:48 = 288 min, etc.)
+const RAW = [
+  {sem:1, fecha:'30 Mar',ciclo:'Mesociclo 1',        kmTeo:48,  tiempoTeo:288,  kmReal:8,   tiempoReal:282, des:0,   tipo:'B',nota:'Todo Z1 y 2'},
+  {sem:2, fecha:'6 Abr', ciclo:'',                   kmTeo:51,  tiempoTeo:306,  kmReal:44,  tiempoReal:352, des:650, tipo:'B',nota:'Incrementar desnivel'},
+  {sem:3, fecha:'13 Abr',ciclo:'',                   kmTeo:60,  tiempoTeo:360,  kmReal:null,tiempoReal:null,des:null,tipo:'B',nota:''},
+  {sem:4, fecha:'20 Abr',ciclo:'',                   kmTeo:32,  tiempoTeo:360,  kmReal:null,tiempoReal:null,des:null,tipo:'R',nota:''},
+  {sem:5, fecha:'27 Abr',ciclo:'Mesociclo 2',        kmTeo:61,  tiempoTeo:366,  kmReal:null,tiempoReal:null,des:null,tipo:'B',nota:'Incrementar desnivel'},
+  {sem:6, fecha:'4 May', ciclo:'',                   kmTeo:69,  tiempoTeo:414,  kmReal:null,tiempoReal:null,des:null,tipo:'B',nota:''},
+  {sem:7, fecha:'11 May',ciclo:'',                   kmTeo:74,  tiempoTeo:444,  kmReal:null,tiempoReal:null,des:null,tipo:'B',nota:'Incrementar desnivel'},
+  {sem:8, fecha:'18 May',ciclo:'',                   kmTeo:45,  tiempoTeo:270,  kmReal:null,tiempoReal:null,des:null,tipo:'R',nota:''},
+  {sem:9, fecha:'25 May',ciclo:'Mesociclo 3',        kmTeo:64,  tiempoTeo:384,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:10,fecha:'1 Jun', ciclo:'',                   kmTeo:71,  tiempoTeo:426,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:11,fecha:'8 Jun', ciclo:'',                   kmTeo:77,  tiempoTeo:462,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:'Carrera mountain trail'},
+  {sem:12,fecha:'15 Jun',ciclo:'',                   kmTeo:48,  tiempoTeo:288,  kmReal:null,tiempoReal:null,des:null,tipo:'R',nota:''},
+  {sem:13,fecha:'22 Jun',ciclo:'Mesociclo 4',        kmTeo:80,  tiempoTeo:480,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:14,fecha:'29 Jun',ciclo:'',                   kmTeo:87,  tiempoTeo:522,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:15,fecha:'6 Jul', ciclo:'',                   kmTeo:95,  tiempoTeo:570,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:16,fecha:'13 Jul',ciclo:'',                   kmTeo:48,  tiempoTeo:288,  kmReal:null,tiempoReal:null,des:null,tipo:'R',nota:''},
+  {sem:17,fecha:'20 Jul',ciclo:'Mesociclo 5 (50km)', kmTeo:103, tiempoTeo:618,  kmReal:null,tiempoReal:null,des:null,tipo:'S',nota:''},
+  {sem:18,fecha:'27 Jul',ciclo:'',                   kmTeo:113, tiempoTeo:678,  kmReal:null,tiempoReal:null,des:null,tipo:'S',nota:'Carrera TT'},
+  {sem:19,fecha:'3 Ago', ciclo:'',                   kmTeo:48,  tiempoTeo:288,  kmReal:null,tiempoReal:null,des:null,tipo:'T',nota:''},
+  {sem:20,fecha:'10 Ago',ciclo:'',                   kmTeo:80,  tiempoTeo:480,  kmReal:null,tiempoReal:null,des:null,tipo:'G',nota:''},
+  {sem:21,fecha:'17 Ago',ciclo:'',                   kmTeo:48,  tiempoTeo:288,  kmReal:null,tiempoReal:null,des:null,tipo:'R',nota:''},
+  {sem:22,fecha:'24 Ago',ciclo:'Mesociclo 6 UTACCH', kmTeo:106, tiempoTeo:636,  kmReal:null,tiempoReal:null,des:null,tipo:'I',nota:''},
+  {sem:23,fecha:'31 Ago',ciclo:'',                   kmTeo:116, tiempoTeo:696,  kmReal:null,tiempoReal:null,des:null,tipo:'S',nota:''},
+  {sem:24,fecha:'7 Sep', ciclo:'',                   kmTeo:126, tiempoTeo:756,  kmReal:null,tiempoReal:null,des:null,tipo:'S',nota:''},
+  {sem:25,fecha:'14 Sep',ciclo:'',                   kmTeo:89,  tiempoTeo:534,  kmReal:null,tiempoReal:null,des:null,tipo:'T',nota:''},
+  {sem:26,fecha:'21 Sep',ciclo:'',                   kmTeo:72,  tiempoTeo:432,  kmReal:null,tiempoReal:null,des:null,tipo:'T',nota:''},
+  {sem:27,fecha:'28 Sep',ciclo:'',                   kmTeo:48,  tiempoTeo:288,  kmReal:null,tiempoReal:null,des:null,tipo:'T',nota:''},
+  {sem:28,fecha:'5 Oct', ciclo:'',                   kmTeo:110, tiempoTeo:660,  kmReal:null,tiempoReal:null,des:null,tipo:'G',nota:''},
+];
+
+const typeColors = {B:'#378ADD',I:'#D85A30',R:'#639922',S:'#EF9F27',T:'#D4537E',G:'#1D9E75'};
+const typeLabels = {B:'Base',I:'Intensidad',R:'Recuperación',S:'Especificidad',T:'Reducción',G:'Meta'};
+
+// Migración: si existe v2 sin des editable, lo mantenemos; nueva clave v3
+let stored = localStorage.getItem('trailData2026v3');
+if(!stored) {
+  // intentar migrar desde v2
+  const old = localStorage.getItem('trailData2026v2');
+  if(old) {
+    const oldData = JSON.parse(old);
+    // merge: conservar kmReal, tiempoReal, des del old; actualizar tiempoTeo del RAW
+    const merged = RAW.map((r,i) => {
+      const o = oldData[i] || {};
+      return { ...r, kmReal: o.kmReal!==undefined?o.kmReal:r.kmReal, tiempoReal: o.tiempoReal!==undefined?o.tiempoReal:r.tiempoReal, des: o.des!==undefined?o.des:r.des };
+    });
+    stored = JSON.stringify(merged);
+  }
+}
+let data = stored ? JSON.parse(stored) : RAW.map(r=>({...r}));
+
+function save() { try { localStorage.setItem('trailData2026v3', JSON.stringify(data)); } catch(e){} }
+
+function minToHHMM(min) {
+  if(min===null||min===undefined) return '—';
+  const h=Math.floor(min/60), m=Math.round(min%60);
+  return h+':'+(m<10?'0':'')+m;
+}
+function hhmmToMin(str) {
+  if(!str||str.trim()==='') return null;
+  str=str.trim();
+  if(/^\d+$/.test(str)) { const v=parseInt(str); return isNaN(v)?null:v; }
+  const p=str.split(':');
+  if(p.length===2) { const h=parseInt(p[0]),m=parseInt(p[1]); return (isNaN(h)||isNaN(m))?null:h*60+m; }
+  return null;
+}
+
+function currentSem() {
+  const s=[new Date(2026,2,30),new Date(2026,3,6),new Date(2026,3,13),new Date(2026,3,20),new Date(2026,3,27),new Date(2026,4,4),new Date(2026,4,11),new Date(2026,4,18),new Date(2026,4,25),new Date(2026,5,1),new Date(2026,5,8),new Date(2026,5,15),new Date(2026,5,22),new Date(2026,5,29),new Date(2026,6,6),new Date(2026,6,13),new Date(2026,6,20),new Date(2026,6,27),new Date(2026,7,3),new Date(2026,7,10),new Date(2026,7,17),new Date(2026,7,24),new Date(2026,7,31),new Date(2026,8,7),new Date(2026,8,14),new Date(2026,8,21),new Date(2026,8,28),new Date(2026,9,5)];
+  const t=new Date(); for(let i=s.length-1;i>=0;i--) { if(t>=s[i]) return i+1; } return 1;
+}
+
+function pctColor(p) { return p>=90?'#1D9E75':p>=70?'#EF9F27':'#E24B4A'; }
+
+function renderMetrics() {
+  const done=data.filter(d=>d.kmReal!==null&&d.kmReal>0);
+  const totalTeo=data.reduce((a,d)=>a+d.kmTeo,0);
+  const totalReal=done.reduce((a,d)=>a+(d.kmReal||0),0);
+  const teoSoFar=done.reduce((a,d)=>a+d.kmTeo,0);
+  const pct=teoSoFar>0?Math.round(totalReal/teoSoFar*100):0;
+  const sem=currentSem(), cur=data[sem-1];
+  const totT=data.filter(d=>d.tiempoReal!==null).reduce((a,d)=>a+(d.tiempoReal||0),0);
+  const totalDes=data.filter(d=>d.des!==null&&d.des>0).reduce((a,d)=>a+(d.des||0),0);
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Semana actual</div><div class="metric-value">${sem}</div><div class="metric-sub">de 28 semanas</div></div>
+    <div class="metric"><div class="metric-label">Km reales</div><div class="metric-value">${Math.round(totalReal)}</div><div class="metric-sub">de ${totalTeo} km planif. · ${pct}%</div></div>
+    <div class="metric"><div class="metric-label">Tiempo acumulado</div><div class="metric-value" style="font-size:18px">${totT>0?minToHHMM(totT):'—'}</div><div class="metric-sub">h:mm registradas</div></div>
+    <div class="metric"><div class="metric-label">Desnivel acumulado</div><div class="metric-value" style="font-size:18px">${totalDes>0?totalDes.toLocaleString()+'m':'—'}</div><div class="metric-sub">metros registrados</div></div>
+  `;
+}
+
+let charts={};
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function renderMainChart() {
+  destroyChart('main');
+  const ctx=document.getElementById('mainChart').getContext('2d');
+  charts['main']=new Chart(ctx,{
+    type:'bar',
+    data:{labels:data.map(d=>'S'+d.sem),datasets:[
+      {label:'Km teóricos',data:data.map(d=>d.kmTeo),backgroundColor:data.map(d=>typeColors[d.tipo]+'66'),borderColor:data.map(d=>typeColors[d.tipo]),borderWidth:1,order:2},
+      {label:'Km reales',data:data.map(d=>d.kmReal),type:'line',borderColor:'#1D9E75',backgroundColor:'transparent',pointBackgroundColor:'#1D9E75',pointRadius:4,borderWidth:2,order:1,spanGaps:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:(i)=>'Semana '+data[i[0].dataIndex].sem+' · '+data[i[0].dataIndex].fecha}}},scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false}},y:{ticks:{font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}}}}
+  });
+}
+
+function renderTypeChart() {
+  destroyChart('type');
+  const counts={};
+  data.forEach(d=>{ counts[d.tipo]=(counts[d.tipo]||0)+1; });
+  const types=Object.keys(counts);
+  document.getElementById('type-legend').innerHTML=types.map(t=>`<span style="display:flex;align-items:center;gap:6px;font-size:12px"><span style="width:10px;height:10px;border-radius:2px;flex-shrink:0;background:${typeColors[t]}"></span>${typeLabels[t]} <span style="color:var(--text2)">${counts[t]} sem</span></span>`).join('');
+  const ctx=document.getElementById('typeChart').getContext('2d');
+  charts['type']=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:types.map(t=>typeLabels[t]),datasets:[{data:types.map(t=>counts[t]),backgroundColor:types.map(t=>typeColors[t]),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+  });
+}
+
+function renderTable() {
+  const sem=currentSem(); let html='',lastCiclo='';
+  data.forEach((d,i)=>{
+    if(d.ciclo&&d.ciclo!==lastCiclo) { html+=`<tr class="ciclo-header"><td colspan="9">${d.ciclo}</td></tr>`; lastCiclo=d.ciclo; }
+    const pctKm = d.kmReal!==null ? Math.round(d.kmReal/d.kmTeo*100) : null;
+    const pctT  = d.tiempoReal!==null&&d.tiempoTeo ? Math.round(d.tiempoReal/d.tiempoTeo*100) : null;
+    const barKm = pctKm!==null?`<div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pctKm,150)}%;background:${pctColor(pctKm)}"></div></div>`:'';
+    const barT  = pctT!==null ?`<div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pctT,150)}%;background:${pctColor(pctT)}"></div></div>`:'';
+    html+=`<tr ${d.sem===sem?'class="current-week"':''}>
+      <td style="font-weight:500">${d.sem}</td>
+      <td style="color:var(--text2);white-space:nowrap">${d.fecha}</td>
+      <td><span class="badge badge-${d.tipo}">${d.tipo}</span></td>
+      <td style="font-weight:500">${d.kmTeo}</td>
+      <td>
+        <input class="input-val" type="number" min="0" value="${d.kmReal!==null?d.kmReal:''}" placeholder="—"
+          onchange="updateField(${i},'kmReal',this.value,'num')" onkeydown="if(event.key==='Enter')this.blur()">
+        ${barKm}
+      </td>
+      <td style="color:var(--text2);white-space:nowrap">${minToHHMM(d.tiempoTeo)}</td>
+      <td>
+        <input class="input-val input-time" type="text" value="${d.tiempoReal!==null?minToHHMM(d.tiempoReal):''}" placeholder="h:mm"
+          onchange="updateField(${i},'tiempoReal',this.value,'time')" onkeydown="if(event.key==='Enter')this.blur()">
+        ${barT}
+      </td>
+      <td>
+        <input class="input-val input-des" type="number" min="0" value="${d.des!==null?d.des:''}" placeholder="—"
+          onchange="updateField(${i},'des',this.value,'num')" onkeydown="if(event.key==='Enter')this.blur()">
+      </td>
+      <td class="comment-cell" title="${d.nota}">${d.nota||'—'}</td>
+    </tr>`;
+  });
+  document.getElementById('tableBody').innerHTML=html;
+}
+
+let progressMetric='km';
+
+function setMetric(m,btn) {
+  progressMetric=m;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderComplianceChart(); renderAcumChart();
+}
+
+function renderComplianceChart() {
+  destroyChart('compliance');
+  const isKm=progressMetric==='km';
+  document.getElementById('complianceTitle').textContent=isKm?'Cumplimiento semanal — km (%)':'Cumplimiento semanal — tiempo (%)';
+  const pcts=data.map(d=>{
+    if(isKm) return d.kmReal!=null?Math.round(d.kmReal/d.kmTeo*100):null;
+    return d.tiempoReal!=null&&d.tiempoTeo?Math.round(d.tiempoReal/d.tiempoTeo*100):null;
+  });
+  const colors=pcts.map(p=>p===null?'rgba(128,128,128,0.25)':pctColor(p));
+  const ctx=document.getElementById('complianceChart').getContext('2d');
+  charts['compliance']=new Chart(ctx,{
+    type:'bar',
+    data:{labels:data.map(d=>'S'+d.sem),datasets:[{data:pcts,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(i)=>i.raw!==null?i.raw+'%':'Sin datos'}}},scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false}},y:{max:150,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}}}}
+  });
+}
+
+function renderAcumChart() {
+  destroyChart('acum');
+  const isKm=progressMetric==='km';
+  document.getElementById('acumTitle').textContent=isKm?'Acumulado km (teórico vs real)':'Acumulado tiempo en horas (teórico vs real)';
+  let at=0,ar=0; const tl=[],rl=[];
+  data.forEach(d=>{
+    const teo=isKm?d.kmTeo:(d.tiempoTeo||0);
+    const real=isKm?d.kmReal:d.tiempoReal;
+    at+=teo; tl.push(at);
+    ar+=(real||0); rl.push(real!=null?ar:null);
+  });
+  const yFmt=isKm?v=>v+' km':v=>Math.round(v/60)+'h';
+  const ttipFmt=isKm?v=>v+' km':v=>minToHHMM(v);
+  const ctx=document.getElementById('acumChart').getContext('2d');
+  charts['acum']=new Chart(ctx,{
+    type:'line',
+    data:{labels:data.map(d=>'S'+d.sem),datasets:[
+      {data:tl,borderColor:'#378ADD',backgroundColor:'transparent',borderDash:[4,3],pointRadius:0,borderWidth:2},
+      {data:rl,borderColor:'#1D9E75',backgroundColor:'transparent',pointBackgroundColor:'#1D9E75',pointRadius:3,borderWidth:2,spanGaps:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(i)=>ttipFmt(i.raw)}}},scales:{x:{ticks:{font:{size:10},autoSkip:false,maxRotation:45},grid:{display:false}},y:{ticks:{callback:yFmt,font:{size:11}},grid:{color:'rgba(128,128,128,0.1)'}}}}
+  });
+}
+
+function updateField(idx, field, val, type) {
+  if(type==='num') {
+    const v=val===''?null:parseFloat(val);
+    data[idx][field]=(isNaN(v)||v<0)?null:v;
+  } else if(type==='time') {
+    data[idx][field]=hhmmToMin(val);
+  }
+  save(); refresh();
+}
+
+function refresh() {
+  renderMetrics(); renderMainChart(); renderTable();
+  renderComplianceChart(); renderAcumChart();
+}
+
+function showPanel(name,btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='overview'){renderMainChart();renderTypeChart();}
+  if(name==='progress'){renderComplianceChart();renderAcumChart();}
+}
+
+renderMetrics(); renderMainChart(); renderTypeChart(); renderTable();
+</script>
+</body>
+</html>
